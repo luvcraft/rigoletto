@@ -250,9 +250,11 @@ public class RiggerBehavior : MonoBehaviour
 		}
 
 		mesh.bindposes = bindPoses.ToArray();
-		mesh.RecalculateBounds();
 
 		skinnedMeshRenderer.sharedMesh = mesh;
+
+		// for some reason the bounding box is wrong if this is false
+		skinnedMeshRenderer.updateWhenOffscreen = true;
 	}
 }
 
