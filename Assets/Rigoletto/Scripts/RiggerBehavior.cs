@@ -180,10 +180,10 @@ public class RiggerBehavior : MonoBehaviour
 	/// <param name="asset"></param>
 	private void SaveAsset(Object asset)
 	{
-		string path = "Assets/Rigoletto/Generated/";
+		string path = "Assets/Rigoletto Generated/";
 		if(!AssetDatabase.IsValidFolder(path.TrimEnd('/')))
 		{
-			AssetDatabase.CreateFolder("Assets/Rigoletto", "Generated");
+			AssetDatabase.CreateFolder("Assets","Rigoletto Generated");
 		}
 		string name = asset.name;
 		int i = 0;
@@ -197,22 +197,13 @@ public class RiggerBehavior : MonoBehaviour
 
 	/// <summary>
 	/// Triggered by inspector button press
-	/// Refreshes the skeleton, and also checks to make sure the mesh is editable
+	/// Refreshes the skeleton
 	/// Typically we'll only get here if we start with a skinned mesh, skipping the
 	/// ...step of converting from a MeshFilter
 	/// </summary>
 	public void RefreshSkeleton()
 	{
 		CheckRootTransform(skinnedMeshRenderer.transform);
-
-		// also check to make sure mesh is editable while we're here
-		if(AssetDatabase.Contains(skinnedMeshRenderer.sharedMesh))
-		{
-			Debug.Log("Mesh not editable. Fixing.");
-			Mesh mesh = Instantiate(skinnedMeshRenderer.sharedMesh);
-			skinnedMeshRenderer.sharedMesh = mesh;
-			skinnedMeshRenderer.sharedMesh.name = "Editable Mesh";
-		}
 	}
 
 	public void AddAvatar()
