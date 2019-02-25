@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 96fff4ff44dc9bd478f751f51c138e84
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - meshFilter: {instanceID: 0}
+  - skinnedMeshRenderer: {instanceID: 0}
+  - animator: {instanceID: 0}
+  - skeleton: {instanceID: 0}
+  - referenceAvatar: {fileID: 9000000, guid: 2c95878d8c773284d81dced339858118, type: 2}
+  - defaultController: {fileID: 9100000, guid: 717566d44230ffc4e9f5ac8c10f05b35, type: 2}
+  - referenceSkeleton: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

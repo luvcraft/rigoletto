@@ -162,6 +162,7 @@ public class RiggerBehavior : MonoBehaviour
 		skinnedMeshRenderer.transform.SnapToZero();
 		skinnedMeshRenderer.sharedMesh = Instantiate(meshFilter.sharedMesh);
 		skinnedMeshRenderer.sharedMesh.name = "Editable Mesh";
+		SaveAsset(skinnedMeshRenderer.sharedMesh);
 
 		MeshRenderer meshrenderer = meshFilter.GetComponent<MeshRenderer>();
 		if(meshrenderer)
@@ -170,6 +171,28 @@ public class RiggerBehavior : MonoBehaviour
 		}
 
 		DestroyImmediate(meshFilter.gameObject);
+	}
+
+	/// <summary>
+	/// Save a generated asset to "Assets/Rigoletto/Generated/"
+	/// You can later move it wherever you want
+	/// </summary>
+	/// <param name="asset"></param>
+	private void SaveAsset(Object asset)
+	{
+		string path = "Assets/Rigoletto/Generated/";
+		if(!AssetDatabase.IsValidFolder(path.TrimEnd('/')))
+		{
+			AssetDatabase.CreateFolder("Assets/Rigoletto", "Generated");
+		}
+		string name = asset.name;
+		int i = 0;
+		while(AssetDatabase.LoadAssetAtPath(path + name + ".asset", typeof(Object)) && i < 10)
+		{
+			name = asset.name + " " + i.ToString();
+			i++;
+		}
+		AssetDatabase.CreateAsset(asset, path + name + ".asset");
 	}
 
 	/// <summary>
@@ -199,6 +222,7 @@ public class RiggerBehavior : MonoBehaviour
 		HumanDescription humanDescription = referenceAvatar.humanDescription;
 		animator.avatar = AvatarBuilder.BuildHumanAvatar(animator.gameObject, humanDescription);
 		animator.avatar.name = "Generated Avatar";
+		SaveAsset(animator.avatar);
 	}
 
 	public void Skin()

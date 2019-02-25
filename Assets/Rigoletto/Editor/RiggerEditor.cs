@@ -32,7 +32,7 @@ public class RiggerEditor : Editor
 			rigger.RefreshSkeleton();
 		}
 
-		if(rigger.animator && !rigger.animator.avatar && rigger.skeleton.parent == rigger.animator.transform && GUILayout.Button("Add Avatar"))
+		if(rigger.animator && !rigger.animator.avatar && rigger.skeleton && rigger.skeleton.parent == rigger.animator.transform && GUILayout.Button("Add Avatar"))
 		{
 			rigger.AddAvatar();
 		}
