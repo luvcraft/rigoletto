@@ -2,6 +2,10 @@
 using UnityEngine;
 using UnityEditor;
 
+/// <summary>
+/// A tool that can be used to quickly and sloppily rig a model,
+/// starting from a MeshFilter or SkinnedMeshRenderer
+/// </summary>
 public class RiggerBehavior : MonoBehaviour
 {
 	[HideInInspector]
@@ -45,6 +49,10 @@ public class RiggerBehavior : MonoBehaviour
 		}
 	}
 
+	/// <summary>
+	/// Setup mirrored pairs of bones, so that they will move together when
+	/// "symmetrical" is enabled.
+	/// </summary>
 	private void SetBonePairs()
 	{
 		bonePairs = new Dictionary<Transform, Transform>();
@@ -72,6 +80,9 @@ public class RiggerBehavior : MonoBehaviour
 		}
 	}
 
+	/// <summary>
+	/// Draws the skeleton with small spheres and lines
+	/// </summary>
 	private void DrawSkeleton()
 	{
 		foreach(Transform b in bones)
@@ -87,6 +98,10 @@ public class RiggerBehavior : MonoBehaviour
 		}
 	}
 
+	/// <summary>
+	/// Checks to see if you're currently moving a bone that's paired to another one,
+	/// and moves the other one if it is
+	/// </summary>
 	private void BonePairCheck()
 	{
 		if(!Selection.activeGameObject || !bones.Contains(Selection.activeGameObject.transform))
@@ -101,6 +116,11 @@ public class RiggerBehavior : MonoBehaviour
 		}
 	}
 
+	/// <summary>
+	/// Checks to make sure the character transform hierarchy is setup correctly,
+	/// with a root transform with an Animator on it, and the mesh and skeleton as children
+	/// </summary>
+	/// <param name="childTransform"></param>
 	private void CheckRootTransform(Transform childTransform)
 	{
 		if(!rootTransform)
@@ -146,6 +166,10 @@ public class RiggerBehavior : MonoBehaviour
 		}
 	}
 
+	/// <summary>
+	/// Triggered by inspector button press
+	/// Convert meshFilter into a SkinnedMeshRenderer
+	/// </summary>
 	public void ConvertMesh()
 	{
 		if(!meshFilter)
@@ -174,7 +198,7 @@ public class RiggerBehavior : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Save a generated asset to "Assets/Rigoletto/Generated/"
+	/// Save a generated asset to "Assets/Rigoletto Generated/"
 	/// You can later move it wherever you want
 	/// </summary>
 	/// <param name="asset"></param>
@@ -183,7 +207,7 @@ public class RiggerBehavior : MonoBehaviour
 		string path = "Assets/Rigoletto Generated/";
 		if(!AssetDatabase.IsValidFolder(path.TrimEnd('/')))
 		{
-			AssetDatabase.CreateFolder("Assets","Rigoletto Generated");
+			AssetDatabase.CreateFolder("Assets", "Rigoletto Generated");
 		}
 		string name = asset.name;
 		int i = 0;
@@ -199,13 +223,17 @@ public class RiggerBehavior : MonoBehaviour
 	/// Triggered by inspector button press
 	/// Refreshes the skeleton
 	/// Typically we'll only get here if we start with a skinned mesh, skipping the
-	/// ...step of converting from a MeshFilter
+	/// step of converting from a MeshFilter
 	/// </summary>
 	public void RefreshSkeleton()
 	{
 		CheckRootTransform(skinnedMeshRenderer.transform);
 	}
 
+	/// <summary>
+	/// Triggered by inspector button press
+	/// Add a humanoid avatar to the model
+	/// </summary>
 	public void AddAvatar()
 	{
 		animator.runtimeAnimatorController = defaultController;
@@ -216,6 +244,10 @@ public class RiggerBehavior : MonoBehaviour
 		SaveAsset(animator.avatar);
 	}
 
+	/// <summary>
+	/// Triggered by inspector button press
+	/// Skin the skinnedMeshRenderer to the skeleton, attaching each vertex to the nearest bone
+	/// </summary>
 	public void Skin()
 	{
 		CheckRootTransform(skinnedMeshRenderer.transform);
@@ -271,11 +303,30 @@ public class RiggerBehavior : MonoBehaviour
 		// for some reason the bounding box is wrong if this is false
 		skinnedMeshRenderer.updateWhenOffscreen = true;
 	}
+
+	/// <summary>
+	/// Triggered by inspector button press
+	/// remove skeleton from skin so skeleton can be adjusted
+	/// </summary>
+	public void Unskin()
+	{
+		Mesh mesh = skinnedMeshRenderer.sharedMesh;
+
+		mesh.boneWeights = new BoneWeight[0];
+		mesh.bindposes = new Matrix4x4[0];
+		skinnedMeshRenderer.rootBone = null;
+
+		skinnedMeshRenderer.sharedMesh = mesh;
+
+		bones.Clear();
+	}
 }
 
 public static class TransformExtensions
 {
-	/// <summary>Snaps the transform's local position and rotation to zero and local scale to one</summary>
+	/// <summary>
+	/// Snaps the transform's local position and rotation to zero and local scale to one
+	/// </summary>
 	public static void SnapToZero(this Transform source)
 	{
 		source.localPosition = Vector3.zero;

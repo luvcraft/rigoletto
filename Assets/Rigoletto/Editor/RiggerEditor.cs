@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
+/// <summary>
+/// Editor for RiggerBehavior.
+/// Provides handy buttons to step through the conversion process!
+/// </summary>
 [CustomEditor(typeof(RiggerBehavior))]
 public class RiggerEditor : Editor
 {
@@ -40,6 +44,11 @@ public class RiggerEditor : Editor
 		if(rigger.skinnedMeshRenderer && rigger.skeleton && GUILayout.Button("Skin"))
 		{
 			rigger.Skin();
+		}
+
+		if(rigger.skinnedMeshRenderer && GUILayout.Button("UnSkin"))
+		{
+			rigger.Unskin();
 		}
 	}
 
