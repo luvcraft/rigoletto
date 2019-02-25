@@ -1,80 +1,83 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-/// <summary>
-/// Editor for RiggerBehavior.
-/// Provides handy buttons to step through the conversion process!
-/// </summary>
-[CustomEditor(typeof(RiggerBehavior))]
-public class RiggerEditor : Editor
+namespace Rigoletto
 {
-	public override void OnInspectorGUI()
+	/// <summary>
+	/// Editor for RiggerBehavior.
+	/// Provides handy buttons to step through the conversion process!
+	/// </summary>
+	[CustomEditor(typeof(RiggerBehavior))]
+	public class RiggerEditor : Editor
 	{
-		base.OnInspectorGUI();
-
-		// easy way to put an "hr" in inspector!
-		EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-
-		RiggerBehavior rigger = target as RiggerBehavior;
-
-		if(!rigger.skinnedMeshRenderer)
+		public override void OnInspectorGUI()
 		{
-			rigger.meshFilter = EditorGUILayout.ObjectField("Mesh Filter", rigger.meshFilter, typeof(MeshFilter), true) as MeshFilter;
-		}
-		if(!rigger.meshFilter)
-		{
-			rigger.skinnedMeshRenderer = EditorGUILayout.ObjectField("Skinned Mesh", rigger.skinnedMeshRenderer, typeof(SkinnedMeshRenderer), true) as SkinnedMeshRenderer;
-		}
+			base.OnInspectorGUI();
 
-		if(rigger.meshFilter && !rigger.skinnedMeshRenderer && GUILayout.Button("Convert Mesh"))
-		{
-			rigger.ConvertMesh();
-		}
+			// easy way to put an "hr" in inspector!
+			EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 
-		if(rigger.skinnedMeshRenderer && !rigger.skeleton && GUILayout.Button("Refresh Skeleton"))
-		{
-			rigger.RefreshSkeleton();
-		}
+			RiggerBehavior rigger = target as RiggerBehavior;
 
-		if(rigger.animator && !rigger.animator.avatar && rigger.skeleton && rigger.skeleton.parent == rigger.animator.transform && GUILayout.Button("Add Avatar"))
-		{
-			rigger.AddAvatar();
-		}
-
-		if(rigger.skinnedMeshRenderer && rigger.skeleton && GUILayout.Button("Skin"))
-		{
-			rigger.Skin();
-		}
-
-		if(rigger.skinnedMeshRenderer && GUILayout.Button("UnSkin"))
-		{
-			rigger.Unskin();
-		}
-	}
-
-	private void OnSceneGUI()
-	{
-		RiggerBehavior rigger = target as RiggerBehavior;
-		DrawSkeleton(rigger);
-	}
-
-	private void DrawSkeleton(RiggerBehavior rigger)
-	{
-		if(rigger.bones == null || (Event.current.type != EventType.Repaint))
-		{
-			return;
-		}
-
-		foreach(Transform b in rigger.bones)
-		{
-			Handles.color = Color.cyan;
-			Handles.SphereHandleCap(0, b.position, Quaternion.identity, 0.02f, EventType.Repaint);
-			Handles.color = Color.yellow;
-			if(b.parent == rigger.skeleton)
+			if(!rigger.skinnedMeshRenderer)
 			{
-				Handles.color = Color.red;
+				rigger.meshFilter = EditorGUILayout.ObjectField("Mesh Filter", rigger.meshFilter, typeof(MeshFilter), true) as MeshFilter;
 			}
-			Handles.DrawLine(b.position, b.parent.position);
+			if(!rigger.meshFilter)
+			{
+				rigger.skinnedMeshRenderer = EditorGUILayout.ObjectField("Skinned Mesh", rigger.skinnedMeshRenderer, typeof(SkinnedMeshRenderer), true) as SkinnedMeshRenderer;
+			}
+
+			if(rigger.meshFilter && !rigger.skinnedMeshRenderer && GUILayout.Button("Convert Mesh"))
+			{
+				rigger.ConvertMesh();
+			}
+
+			if(rigger.skinnedMeshRenderer && !rigger.skeleton && GUILayout.Button("Refresh Skeleton"))
+			{
+				rigger.RefreshSkeleton();
+			}
+
+			if(rigger.animator && !rigger.animator.avatar && rigger.skeleton && rigger.skeleton.parent == rigger.animator.transform && GUILayout.Button("Add Avatar"))
+			{
+				rigger.AddAvatar();
+			}
+
+			if(rigger.skinnedMeshRenderer && rigger.skeleton && GUILayout.Button("Skin"))
+			{
+				rigger.Skin();
+			}
+
+			if(rigger.skinnedMeshRenderer && GUILayout.Button("UnSkin"))
+			{
+				rigger.Unskin();
+			}
+		}
+
+		private void OnSceneGUI()
+		{
+			RiggerBehavior rigger = target as RiggerBehavior;
+			DrawSkeleton(rigger);
+		}
+
+		private void DrawSkeleton(RiggerBehavior rigger)
+		{
+			if(rigger.bones == null || (Event.current.type != EventType.Repaint))
+			{
+				return;
+			}
+
+			foreach(Transform b in rigger.bones)
+			{
+				Handles.color = Color.cyan;
+				Handles.SphereHandleCap(0, b.position, Quaternion.identity, 0.02f, EventType.Repaint);
+				Handles.color = Color.yellow;
+				if(b.parent == rigger.skeleton)
+				{
+					Handles.color = Color.red;
+				}
+				Handles.DrawLine(b.position, b.parent.position);
+			}
 		}
 	}
 }
