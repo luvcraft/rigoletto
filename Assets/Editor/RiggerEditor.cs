@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 
 [CustomEditor(typeof(RiggerBehavior))]
@@ -10,17 +8,38 @@ public class RiggerEditor : Editor
 	{
 		base.OnInspectorGUI();
 
+		// easy way to put an "hr" in inspector!
+		EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+
 		RiggerBehavior rigger = target as RiggerBehavior;
 
-
-		if(rigger.skinnedMeshRenderer && GUILayout.Button("Skin"))
+		if(!rigger.skinnedMeshRenderer)
 		{
-			rigger.Skin();
+			rigger.meshFilter = EditorGUILayout.ObjectField("Mesh Filter", rigger.meshFilter, typeof(MeshFilter), true) as MeshFilter;
+		}
+		if(!rigger.meshFilter)
+		{
+			rigger.skinnedMeshRenderer = EditorGUILayout.ObjectField("Skinned Mesh", rigger.skinnedMeshRenderer, typeof(SkinnedMeshRenderer), true) as SkinnedMeshRenderer;
 		}
 
-		if(GUILayout.Button("Add Avatar"))
+		if(rigger.meshFilter && !rigger.skinnedMeshRenderer && GUILayout.Button("Convert Mesh"))
+		{
+			rigger.ConvertMesh();
+		}
+
+		if(rigger.skinnedMeshRenderer && !rigger.skeleton && GUILayout.Button("Refresh Skeleton"))
+		{
+			rigger.RefreshSkeleton();
+		}
+
+		if(rigger.animator && !rigger.animator.avatar && rigger.skeleton.parent == rigger.animator.transform && GUILayout.Button("Add Avatar"))
 		{
 			rigger.AddAvatar();
+		}
+
+		if(rigger.skinnedMeshRenderer && rigger.skeleton && GUILayout.Button("Skin"))
+		{
+			rigger.Skin();
 		}
 	}
 
@@ -48,5 +67,5 @@ public class RiggerEditor : Editor
 			}
 			Handles.DrawLine(b.position, b.parent.position);
 		}
-	}	
+	}
 }

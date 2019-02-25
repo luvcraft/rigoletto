@@ -1,23 +1,35 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
 public class RiggerBehavior : MonoBehaviour
 {
-	public MeshRenderer meshRenderer;
+	[HideInInspector]
+	public MeshFilter meshFilter;
+	[HideInInspector]
 	public SkinnedMeshRenderer skinnedMeshRenderer;
+	[HideInInspector]
 	public Animator animator;
-
-	public Avatar referenceAvatar;
-
+	[HideInInspector]
 	public Transform skeleton;
 
-	public List<Transform> bones;
-	public Dictionary<Transform, Transform> bonePairs = new Dictionary<Transform, Transform>();
+	public Avatar referenceAvatar;
+	public RuntimeAnimatorController defaultController;
+	public Transform referenceSkeleton;
+	public List<Transform> bones = new List<Transform>();
+	public bool symmetrical = true;
+
+	private Dictionary<Transform, Transform> bonePairs = new Dictionary<Transform, Transform>();
+	private Transform rootTransform = null;
 
 	private void OnDrawGizmos()
 	{
+		if(!skinnedMeshRenderer)
+		{
+			skeleton = null;
+			bones.Clear();
+		}
+
 		if(skeleton && (bones == null || bones.Count < 1 || bonePairs.Count < 1))
 		{
 			bones = new List<Transform>(skeleton.GetComponentsInChildren<Transform>(true));
@@ -26,7 +38,11 @@ public class RiggerBehavior : MonoBehaviour
 		}
 
 		DrawSkeleton();
-		BonePairCheck();
+
+		if(symmetrical)
+		{
+			BonePairCheck();
+		}
 	}
 
 	private void SetBonePairs()
@@ -54,8 +70,6 @@ public class RiggerBehavior : MonoBehaviour
 				}
 			}
 		}
-
-		Debug.Log((bonePairs.Count / 2).ToString() + " bone pairs found");
 	}
 
 	private void DrawSkeleton()
@@ -87,9 +101,109 @@ public class RiggerBehavior : MonoBehaviour
 		}
 	}
 
+	private void CheckRootTransform(Transform childTransform)
+	{
+		if(!rootTransform)
+		{
+			rootTransform = childTransform.parent;
+		}
+		if(!rootTransform)
+		{
+			rootTransform = (new GameObject()).transform;
+			rootTransform.name = "Character";
+			rootTransform.SnapToZero();
+			childTransform.parent = rootTransform;
+		}
+
+		if(PrefabUtility.IsPartOfAnyPrefab(rootTransform.gameObject))
+		{
+			PrefabUtility.UnpackPrefabInstance(rootTransform.gameObject, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+		}
+
+		if(!skeleton)
+		{
+			if(skinnedMeshRenderer && skinnedMeshRenderer.rootBone)
+			{
+				skeleton = skinnedMeshRenderer.rootBone.parent;
+			}
+			else
+			{
+				skeleton = Instantiate(referenceSkeleton);
+				skeleton.name = "Skeleton";
+				skeleton.gameObject.SetActive(true);
+				skeleton.parent = rootTransform;
+				skeleton.SnapToZero();
+			}
+		}
+
+		if(!animator)
+		{
+			animator = rootTransform.GetComponent<Animator>();
+		}
+		if(!animator)
+		{
+			animator = rootTransform.gameObject.AddComponent<Animator>();
+		}
+	}
+
+	public void ConvertMesh()
+	{
+		if(!meshFilter)
+		{
+			Debug.LogWarning("no mesh renderer!");
+			return;
+		}
+
+		CheckRootTransform(meshFilter.transform);
+
+		skinnedMeshRenderer = (new GameObject()).AddComponent<SkinnedMeshRenderer>();
+		skinnedMeshRenderer.name = "Skinned Mesh";
+		skinnedMeshRenderer.transform.parent = meshFilter.transform.parent;
+		skinnedMeshRenderer.transform.SnapToZero();
+		skinnedMeshRenderer.sharedMesh = Instantiate(meshFilter.sharedMesh);
+		skinnedMeshRenderer.sharedMesh.name = "Editable Mesh";
+
+		MeshRenderer meshrenderer = meshFilter.GetComponent<MeshRenderer>();
+		if(meshrenderer)
+		{
+			skinnedMeshRenderer.sharedMaterials = meshrenderer.sharedMaterials;
+		}
+
+		DestroyImmediate(meshFilter.gameObject);
+	}
+
+	/// <summary>
+	/// Triggered by inspector button press
+	/// Refreshes the skeleton, and also checks to make sure the mesh is editable
+	/// Typically we'll only get here if we start with a skinned mesh, skipping the
+	/// ...step of converting from a MeshFilter
+	/// </summary>
+	public void RefreshSkeleton()
+	{
+		CheckRootTransform(skinnedMeshRenderer.transform);
+
+		// also check to make sure mesh is editable while we're here
+		if(AssetDatabase.Contains(skinnedMeshRenderer.sharedMesh))
+		{
+			Debug.Log("Mesh not editable. Fixing.");
+			Mesh mesh = Instantiate(skinnedMeshRenderer.sharedMesh);
+			skinnedMeshRenderer.sharedMesh = mesh;
+			skinnedMeshRenderer.sharedMesh.name = "Editable Mesh";
+		}
+	}
+
+	public void AddAvatar()
+	{
+		animator.runtimeAnimatorController = defaultController;
+
+		HumanDescription humanDescription = referenceAvatar.humanDescription;
+		animator.avatar = AvatarBuilder.BuildHumanAvatar(animator.gameObject, humanDescription);
+		animator.avatar.name = "Generated Avatar";
+	}
+
 	public void Skin()
 	{
-		Debug.Log("skinning...");
+		CheckRootTransform(skinnedMeshRenderer.transform);
 
 		if(!skinnedMeshRenderer.rootBone)
 		{
@@ -101,7 +215,6 @@ public class RiggerBehavior : MonoBehaviour
 
 		skinnedMeshRenderer.bones = bones.ToArray();
 
-		Vector3 offset = Vector3.zero; // skinnedMeshRenderer.rootBone.position;
 		int closestBone;
 		float closestDistance;
 		foreach(Vector3 v in mesh.vertices)
@@ -111,7 +224,7 @@ public class RiggerBehavior : MonoBehaviour
 
 			for(int b = 0; b < skinnedMeshRenderer.bones.Length; b++)
 			{
-				float d = Vector3.Distance(v - offset, skinnedMeshRenderer.bones[b].position);
+				float d = Vector3.Distance(v, skinnedMeshRenderer.bones[b].position);
 				if(d < closestDistance)
 				{
 					closestBone = b;
@@ -140,14 +253,16 @@ public class RiggerBehavior : MonoBehaviour
 		mesh.RecalculateBounds();
 
 		skinnedMeshRenderer.sharedMesh = mesh;
-
-		Debug.Log("skinned!");
 	}
+}
 
-	public void AddAvatar()
+public static class TransformExtensions
+{
+	/// <summary>Snaps the transform's local position and rotation to zero and local scale to one</summary>
+	public static void SnapToZero(this Transform source)
 	{
-		HumanDescription humanDescription = referenceAvatar.humanDescription;
-		animator.avatar = AvatarBuilder.BuildHumanAvatar(animator.gameObject, humanDescription);
-		animator.avatar.name = "Generated Avatar";
+		source.localPosition = Vector3.zero;
+		source.localScale = Vector3.one;
+		source.localRotation = Quaternion.identity;
 	}
 }
