@@ -18,6 +18,7 @@ namespace Rigoletto
 			EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 
 			RiggerBehavior rigger = target as RiggerBehavior;
+			string instructions = "";
 
 			if(!rigger.skinnedMeshRenderer)
 			{
@@ -28,29 +29,59 @@ namespace Rigoletto
 				rigger.skinnedMeshRenderer = EditorGUILayout.ObjectField("Skinned Mesh", rigger.skinnedMeshRenderer, typeof(SkinnedMeshRenderer), true) as SkinnedMeshRenderer;
 			}
 
-			if(rigger.meshFilter && !rigger.skinnedMeshRenderer && GUILayout.Button("Convert Mesh"))
+			if(!rigger.skinnedMeshRenderer && !rigger.meshFilter)
 			{
-				rigger.ConvertMesh();
+				instructions = "Connect either a MeshFilter or SkinnedMeshRenderer to one of the fields above.";
 			}
 
-			if(rigger.skinnedMeshRenderer && !rigger.skeleton && GUILayout.Button("Refresh Skeleton"))
+			if(rigger.meshFilter && !rigger.skinnedMeshRenderer)
 			{
-				rigger.RefreshSkeleton();
+				if(GUILayout.Button("Convert Mesh"))
+				{
+					rigger.ConvertMesh();
+				}
+				instructions = "Click the \"Convert Mesh\" button to convert the MeshFilter to a SkinnedMeshRenderer.";
 			}
 
-			if(rigger.animator && !rigger.animator.avatar && rigger.skeleton && rigger.skeleton.parent == rigger.animator.transform && GUILayout.Button("Add Avatar"))
+			if(rigger.skinnedMeshRenderer && !rigger.skeleton)
 			{
-				rigger.AddAvatar();
+				if(GUILayout.Button("Refresh Skeleton"))
+				{
+					rigger.RefreshSkeleton();
+				}
+				instructions = "Click the \"Refresh Skeleton\" button to refresh the SkinnedMeshRenderer's skeleton.";
 			}
 
-			if(rigger.skinnedMeshRenderer && rigger.skeleton && GUILayout.Button("Skin"))
+			if(rigger.animator && !rigger.animator.avatar && rigger.skeleton && rigger.skeleton.parent == rigger.animator.transform)
 			{
-				rigger.Skin();
+				if(GUILayout.Button("Add Avatar"))
+				{
+					rigger.AddAvatar();
+				}
+				instructions = "Click the \"Add Avatar\" button to add an avatar to the SkinnedMeshRenderer.";
 			}
 
-			if(rigger.skinnedMeshRenderer && GUILayout.Button("UnSkin"))
+			if(rigger.skinnedMeshRenderer && rigger.skeleton)
 			{
-				rigger.Unskin();
+				if(GUILayout.Button("Skin"))
+				{
+					rigger.Skin();
+				}
+				instructions += "\n\nClick the \"Skin\" button to skin the SkinnedMeshRenderer to the skeleton.";
+			}
+
+			if(rigger.skinnedMeshRenderer)
+			{
+				if(GUILayout.Button("UnSkin"))
+				{
+					rigger.Unskin();
+				}
+				instructions += "\n\nClick the \"UnSkin\" button to unskin the SkinnedMeshRenderer from the skeleton.";
+			}
+
+			if(!string.IsNullOrEmpty(instructions))
+			{
+				EditorGUILayout.HelpBox(instructions.TrimStart('\n'), MessageType.Info);
 			}
 		}
 
