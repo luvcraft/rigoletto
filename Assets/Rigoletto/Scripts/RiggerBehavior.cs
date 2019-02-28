@@ -35,6 +35,10 @@ namespace Rigoletto
 				skeleton = null;
 				bones.Clear();
 			}
+			else if(skinnedMeshRenderer.rootBone && !skeleton)
+			{
+				CheckRootTransform(skinnedMeshRenderer.transform);
+			}
 
 			if(skeleton && (bones == null || bones.Count < 1 || bonePairs.Count < 1))
 			{
@@ -89,14 +93,17 @@ namespace Rigoletto
 		{
 			foreach(Transform b in bones)
 			{
-				Gizmos.color = Color.cyan;
-				Gizmos.DrawSphere(b.position, 0.01f);
-				Gizmos.color = Color.yellow;
-				if(b.parent == skeleton)
+				if(b)
 				{
-					Gizmos.color = Color.red;
+					Gizmos.color = Color.cyan;
+					Gizmos.DrawSphere(b.position, 0.01f);
+					Gizmos.color = Color.yellow;
+					if(b.parent == skeleton)
+					{
+						Gizmos.color = Color.red;
+					}
+					Gizmos.DrawLine(b.position, b.parent.position);
 				}
-				Gizmos.DrawLine(b.position, b.parent.position);
 			}
 		}
 
@@ -223,17 +230,6 @@ namespace Rigoletto
 
 		/// <summary>
 		/// Triggered by inspector button press
-		/// Refreshes the skeleton
-		/// Typically we'll only get here if we start with a skinned mesh, skipping the
-		/// step of converting from a MeshFilter
-		/// </summary>
-		public void RefreshSkeleton()
-		{
-			CheckRootTransform(skinnedMeshRenderer.transform);
-		}
-
-		/// <summary>
-		/// Triggered by inspector button press
 		/// Add a humanoid avatar to the model
 		/// </summary>
 		public void AddAvatar()
@@ -242,7 +238,7 @@ namespace Rigoletto
 
 			HumanDescription humanDescription = referenceAvatar.humanDescription;
 			animator.avatar = AvatarBuilder.BuildHumanAvatar(animator.gameObject, humanDescription);
-			animator.avatar.name = "Generated Avatar";
+			animator.avatar.name = animator.name + " Avatar";
 			SaveAsset(animator.avatar);
 		}
 
