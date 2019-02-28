@@ -25,3 +25,7 @@ ExportedObj/
 # Unity3D Generated File On Crash Reports
 sysinfo.txt
 .vs/
+Assets/Demo/
+Assets/Demo.meta
+Assets/Rigoletto Generated/
+Assets/Rigoletto Generated.meta

@@ -19,7 +19,6 @@ namespace Rigoletto
 		[HideInInspector]
 		public Transform skeleton;
 
-		public Avatar referenceAvatar;
 		public RuntimeAnimatorController defaultController;
 		public Transform referenceSkeleton;
 		public bool symmetrical = true;
@@ -89,14 +88,17 @@ namespace Rigoletto
 		{
 			foreach(Transform b in bones)
 			{
-				Gizmos.color = Color.cyan;
-				Gizmos.DrawSphere(b.position, 0.01f);
-				Gizmos.color = Color.yellow;
-				if(b.parent == skeleton)
+				if(b)
 				{
-					Gizmos.color = Color.red;
+					Gizmos.color = Color.cyan;
+					Gizmos.DrawSphere(b.position, 0.01f);
+					Gizmos.color = Color.yellow;
+					if(b.parent == skeleton)
+					{
+						Gizmos.color = Color.red;
+					}
+					Gizmos.DrawLine(b.position, b.parent.position);
 				}
-				Gizmos.DrawLine(b.position, b.parent.position);
 			}
 		}
 
@@ -240,10 +242,89 @@ namespace Rigoletto
 		{
 			animator.runtimeAnimatorController = defaultController;
 
-			HumanDescription humanDescription = referenceAvatar.humanDescription;
-			animator.avatar = AvatarBuilder.BuildHumanAvatar(animator.gameObject, humanDescription);
-			animator.avatar.name = "Generated Avatar";
-			SaveAsset(animator.avatar);
+			HumanDescription humanDescription = new HumanDescription();
+
+			List<HumanBone> humanBones = new List<HumanBone>();
+			List<SkeletonBone> skeletonBones = new List<SkeletonBone>();
+			SkeletonBone tempSB;
+
+			tempSB = new SkeletonBone
+			{
+				name = skeleton.name,
+				position = skeleton.position,
+				rotation = skeleton.rotation,
+				scale = Vector3.one
+			};
+			skeletonBones.Add(tempSB);
+
+			List<string> boneNames = new List<string>(HumanTrait.BoneName);
+			string extraBones = "";
+
+			foreach(Transform b in bones)
+			{
+				if(boneNames.Contains(b.name.Replace("_", " ")))
+				{
+					HumanBone tempHB = new HumanBone
+					{
+						humanName = b.name.Replace("_", " "),
+						boneName = b.name,
+					};
+					tempHB.limit.useDefaultValues = true;
+					humanBones.Add(tempHB);
+
+					tempSB = new SkeletonBone
+					{
+						name = b.name,
+						position = b.position,
+						rotation = b.rotation,
+						scale = Vector3.one
+					};
+					skeletonBones.Add(tempSB);
+
+					tempSB = new SkeletonBone
+					{
+						name = b.name,
+						position = b.position,
+						rotation = b.rotation,
+						scale = Vector3.one
+					};
+					skeletonBones.Add(tempSB);
+
+				}
+				else
+				{
+					extraBones += "\n" + b.name;
+				}
+			}
+
+			humanDescription.human = humanBones.ToArray();
+			humanDescription.skeleton = skeletonBones.ToArray();
+			humanDescription.lowerArmTwist = 0.5f;
+			humanDescription.upperArmTwist = 0.5f;
+			humanDescription.lowerLegTwist = 0.5f;
+			humanDescription.upperLegTwist = 0.5f;
+			humanDescription.armStretch = 0.05f;
+			humanDescription.legStretch = 0.05f;
+			humanDescription.feetSpacing = 0;
+
+			Avatar avatar = AvatarBuilder.BuildHumanAvatar(animator.gameObject, humanDescription);
+
+			if(avatar.isHuman)
+			{
+				avatar.name = animator.name + " Avatar";
+				animator.avatar = avatar;
+				SaveAsset(animator.avatar);
+				Debug.Log("Avatar created: " + avatar.name);
+			}
+			else
+			{
+				Debug.LogWarning("avatar is not a valid human avatar. Did you rename a bone?");
+			}
+
+			if(!string.IsNullOrEmpty(extraBones))
+			{
+				Debug.Log("Extra Bones Found:" + extraBones);
+			}
 		}
 
 		/// <summary>
