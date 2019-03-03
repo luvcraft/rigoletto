@@ -1825,6 +1825,7 @@ MonoBehaviour:
   skinnedMeshRenderer: {fileID: 0}
   animator: {fileID: 0}
   skeleton: {fileID: 0}
+  referenceAvatar: {fileID: 9000000, guid: 78a808ccbe54640429439c05ae5e6fcc, type: 2}
   defaultController: {fileID: 9100000, guid: 717566d44230ffc4e9f5ac8c10f05b35, type: 2}
   referenceSkeleton: {fileID: 3837914283344366192}
   symmetrical: 1

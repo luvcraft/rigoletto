@@ -43,22 +43,14 @@ namespace Rigoletto
 				instructions = "Click the \"Convert Mesh\" button to convert the MeshFilter to a SkinnedMeshRenderer.";
 			}
 
-			if(rigger.skinnedMeshRenderer && !rigger.skeleton)
-			{
-				if(GUILayout.Button("Refresh Skeleton"))
-				{
-					rigger.RefreshSkeleton();
-				}
-				instructions = "Click the \"Refresh Skeleton\" button to refresh the SkinnedMeshRenderer's skeleton.";
-			}
-
 			if(rigger.animator && !rigger.animator.avatar && rigger.skeleton && rigger.skeleton.parent == rigger.animator.transform)
 			{
-				if(GUILayout.Button("Add Avatar"))
+				if(GUILayout.Button("Create Avatar"))
 				{
-					rigger.AddAvatar();
+					rigger.CreateAvatar();
 				}
-				instructions = "Click the \"Add Avatar\" button to add an avatar to the SkinnedMeshRenderer.";
+
+				instructions = "Click the \"Create Avatar\" button to add an avatar to the SkinnedMeshRenderer.";
 			}
 
 			if(rigger.skinnedMeshRenderer && rigger.skeleton)
