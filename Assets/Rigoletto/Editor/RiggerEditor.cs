@@ -45,11 +45,12 @@ namespace Rigoletto
 
 			if(rigger.animator && !rigger.animator.avatar && rigger.skeleton && rigger.skeleton.parent == rigger.animator.transform)
 			{
-				if(GUILayout.Button("Add Avatar"))
+				if(GUILayout.Button("Create Avatar"))
 				{
-					rigger.AddAvatar();
+					rigger.CreateAvatar();
 				}
-				instructions = "Click the \"Add Avatar\" button to add an avatar to the SkinnedMeshRenderer.";
+
+				instructions = "Click the \"Create Avatar\" button to add an avatar to the SkinnedMeshRenderer.";
 			}
 
 			if(rigger.skinnedMeshRenderer && rigger.skeleton)

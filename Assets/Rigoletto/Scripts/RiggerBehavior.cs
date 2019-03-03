@@ -10,6 +10,8 @@ namespace Rigoletto
 	/// </summary>
 	public class RiggerBehavior : MonoBehaviour
 	{
+		private const string _logPrefix = "<color=brown>Rigoletto:</color> ";
+
 		[HideInInspector]
 		public MeshFilter meshFilter;
 		[HideInInspector]
@@ -19,7 +21,6 @@ namespace Rigoletto
 		[HideInInspector]
 		public Transform skeleton;
 
-		public Avatar referenceAvatar;
 		public RuntimeAnimatorController defaultController;
 		public Transform referenceSkeleton;
 		public bool symmetrical = true;
@@ -183,7 +184,7 @@ namespace Rigoletto
 		{
 			if(!meshFilter)
 			{
-				Debug.LogWarning("no mesh renderer!");
+				LogWarning("no mesh renderer!");
 				return;
 			}
 
@@ -204,6 +205,8 @@ namespace Rigoletto
 			}
 
 			DestroyImmediate(meshFilter.gameObject);
+
+			Log("Mesh converted to skinned mesh");
 		}
 
 		/// <summary>
@@ -230,17 +233,127 @@ namespace Rigoletto
 
 		/// <summary>
 		/// Triggered by inspector button press
-		/// Add a humanoid avatar to the model
+		/// Creates a new avatar for the model based on the skeleton
 		/// </summary>
-		public void AddAvatar()
+		public void CreateAvatar()
 		{
 			animator.runtimeAnimatorController = defaultController;
 
-			HumanDescription humanDescription = referenceAvatar.humanDescription;
-			animator.avatar = AvatarBuilder.BuildHumanAvatar(animator.gameObject, humanDescription);
-			animator.avatar.name = animator.name + " Avatar";
-			SaveAsset(animator.avatar);
+			List<HumanBone> humanBones = new List<HumanBone>();
+			List<SkeletonBone> skeletonBones = new List<SkeletonBone>();
+			SkeletonBone tempSB;
+
+			tempSB = new SkeletonBone
+			{
+				name = skeleton.name,
+				position = skeleton.position,
+				rotation = skeleton.rotation,
+				scale = Vector3.one
+			};
+			skeletonBones.Add(tempSB);
+
+			List<string> boneNames = new List<string>(HumanTrait.BoneName);
+			string extraBones = "";
+
+			foreach(Transform b in bones)
+			{
+				if(boneNames.Contains(b.name.Replace("_", " ")))
+				{
+					HumanBone tempHB = new HumanBone
+					{
+						humanName = b.name.Replace("_", " "),
+						boneName = b.name,
+					};
+					tempHB.limit.useDefaultValues = true;
+					humanBones.Add(tempHB);
+
+					tempSB = new SkeletonBone
+					{
+						name = b.name,
+						position = b.localPosition,
+						rotation = b.localRotation,
+						scale = b.lossyScale
+					};
+					skeletonBones.Add(tempSB);
+				}
+				else
+				{
+					extraBones += "\n" + b.name;
+				}
+			}
+
+			HumanDescription humanDescription = new HumanDescription();
+			humanDescription.lowerArmTwist = 0.5f;
+			humanDescription.upperArmTwist = 0.5f;
+			humanDescription.lowerLegTwist = 0.5f;
+			humanDescription.upperLegTwist = 0.5f;
+			humanDescription.armStretch = 0.05f;
+			humanDescription.legStretch = 0.05f;
+			humanDescription.feetSpacing = 0;
+			humanDescription.human = humanBones.ToArray();
+			humanDescription.skeleton = skeletonBones.ToArray();
+
+			//			PrintHumanDescription(humanDescription);
+
+			Avatar avatar = AvatarBuilder.BuildHumanAvatar(animator.gameObject, humanDescription);
+
+			if(avatar.isHuman)
+			{
+				avatar.name = animator.name + " Avatar";
+				animator.avatar = avatar;
+				SaveAsset(animator.avatar);
+				Log("Avatar created: " + avatar.name);
+			}
+			else
+			{
+				LogWarning("avatar is not a valid human avatar. Did you rename a bone?");
+			}
+
+			if(!string.IsNullOrEmpty(extraBones))
+			{
+				Log("Extra Bones Found:" + extraBones);
+			}
 		}
+
+		/*
+		/// <summary>
+		/// Prints out all details of a human description. Used for debugging.
+		/// </summary>
+		/// <param name="humanDescription"></param>
+		private void PrintHumanDescription(HumanDescription humanDescription)
+		{
+			string s = "Human Description:";
+			s += "\n lowerArmTwist = " + humanDescription.lowerArmTwist;
+			s += "\n upperArmTwist = " + humanDescription.upperArmTwist;
+			s += "\n lowerLegTwist = " + humanDescription.lowerLegTwist;
+			s += "\n upperLegTwist = " + humanDescription.upperLegTwist;
+			s += "\n armStretch = " + humanDescription.armStretch;
+			s += "\n legStretch = " + humanDescription.legStretch;
+			s += "\n feetSpacing = " + humanDescription.feetSpacing;
+			s += "\n hasTranslationDoF = " + humanDescription.hasTranslationDoF;
+
+			s += "\n human = ";
+			foreach(HumanBone b in humanDescription.human)
+			{
+				s += "\n"+b.humanName + ":" + b.boneName;
+				s += "\n-limit.axisLength = " + b.limit.axisLength;
+				s += "\n-limit.center = " + b.limit.center;
+				s += "\n-limit.min = " + b.limit.min;
+				s += "\n-limit.max = " + b.limit.max;
+			}
+
+			s += "\n skeleton = ";
+			foreach(SkeletonBone b in humanDescription.skeleton)
+			{
+				s += "\n" + b.name;
+				s += "\n-position = " + b.position;
+				s += "\n-rotation= =" + b.rotation;
+				s += "\n-scale = " + b.scale;
+			}
+
+			Debug.Log(s);
+		}
+		*/
 
 		/// <summary>
 		/// Triggered by inspector button press
@@ -300,6 +413,8 @@ namespace Rigoletto
 
 			// for some reason the bounding box is wrong if this is false
 			skinnedMeshRenderer.updateWhenOffscreen = true;
+
+			Log("mesh skinned to skeleton");
 		}
 
 		/// <summary>
@@ -317,6 +432,18 @@ namespace Rigoletto
 			skinnedMeshRenderer.sharedMesh = mesh;
 
 			bones.Clear();
+
+			Log("mesh unskinned from skeleton");
+		}
+
+		private void Log(string message)
+		{
+			Debug.Log(_logPrefix + message);
+		}
+
+		private void LogWarning(string message)
+		{
+			Debug.LogWarning(_logPrefix + message);
 		}
 	}
 
