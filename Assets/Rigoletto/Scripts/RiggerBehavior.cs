@@ -195,7 +195,7 @@ namespace Rigoletto
 			skinnedMeshRenderer.transform.parent = meshFilter.transform.parent;
 			skinnedMeshRenderer.transform.SnapToZero();
 			skinnedMeshRenderer.sharedMesh = Instantiate(meshFilter.sharedMesh);
-			skinnedMeshRenderer.sharedMesh.name = "Editable Mesh";
+			skinnedMeshRenderer.sharedMesh.name = rootTransform.name + " Skinned Mesh";
 			SaveAsset(skinnedMeshRenderer.sharedMesh);
 
 			MeshRenderer meshrenderer = meshFilter.GetComponent<MeshRenderer>();
